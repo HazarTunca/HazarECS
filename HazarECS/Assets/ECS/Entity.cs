@@ -1,3 +1,4 @@
+using ECS.ECSComponent;
 using UnityEngine;
 
 namespace ECS

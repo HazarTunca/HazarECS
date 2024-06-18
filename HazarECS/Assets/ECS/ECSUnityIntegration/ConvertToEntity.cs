@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-using ECS.UnityECSIntegration;
 using UnityEngine;
 
-namespace ECS
+namespace ECS.ECSUnityIntegration
 {
     [DisallowMultipleComponent]
     public class ConvertToEntity : MonoBehaviour

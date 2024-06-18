@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ECS.ECSDataStructures;
 
-namespace ECS
+namespace ECS.ECSComponent
 {
     public interface IComponentPool
     {

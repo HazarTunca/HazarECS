@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using ECS.ECSDataStructures;
 
-namespace ECS.UnityECSIntegration
+namespace ECS.ECSUnityIntegration
 {
     public class ECSSystemManager
     {

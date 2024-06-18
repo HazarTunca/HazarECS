@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
+using ECS.ECSComponent;
 using ECS.ECSDataStructures;
-using ECSTest;
-using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace ECS
 {

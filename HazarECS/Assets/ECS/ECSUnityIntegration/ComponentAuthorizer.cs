@@ -1,6 +1,7 @@
+using ECS.ECSComponent;
 using UnityEngine;
 
-namespace ECS.UnityECSIntegration
+namespace ECS.ECSUnityIntegration
 {
     [RequireComponent(typeof(ConvertToEntity))]
     public abstract class ComponentAuthorizer : MonoBehaviour
