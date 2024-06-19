@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ECS.ECSComponent;
 using ECS.ECSDataStructures;
 using ECS.ECSUnityIntegration;
+using ECS.ECSUnityIntegration.UnityComponents;
 using UnityEngine;
 
 namespace ECS
@@ -15,7 +16,7 @@ namespace ECS
     public class World
     {
         public static List<Type> componentTypes = new List<Type>();
-        
+
         public readonly ECSDynamicArray<Entity> entities;
         public readonly ECSDynamicArray<IComponentPool> componentPools;
 
@@ -28,6 +29,9 @@ namespace ECS
             entityComponentIndices = new Dictionary<int, ECSDynamicArray<int>>(128);
             componentPools = new ECSDynamicArray<IComponentPool>(32);
         }
+
+        
+#region Create Entity
 
         public Entity CreateEntity()
         {
@@ -43,30 +47,27 @@ namespace ECS
         {
             // create prefab
             GameObject go = GameObject.Instantiate(prefab);
-            var convertToEntity = go.GetComponent<ConvertToEntity>();
-            convertToEntity.Convert(this);
+            Entity entity = MakeEntityWithChildren(go);
             
-            return convertToEntity.entity;
+            return entity;
         }
         
         public Entity Instantiate(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             // create prefab
             GameObject go = GameObject.Instantiate(prefab, position, rotation);
-            var convertToEntity = go.GetComponent<ConvertToEntity>();
-            convertToEntity.Convert(this);
+            Entity entity = MakeEntityWithChildren(go);
             
-            return convertToEntity.entity;
+            return entity;
         }
         
         public Entity Instantiate(GameObject prefab, Transform parent, bool worldPositionStays)
         {
             // create prefab
             GameObject go = GameObject.Instantiate(prefab, parent, worldPositionStays);
-            var convertToEntity = go.GetComponent<ConvertToEntity>();
-            convertToEntity.Convert(this);
+            Entity entity = MakeEntityWithChildren(go);
             
-            return convertToEntity.entity;
+            return entity;
         }
         
         public Entity Instantiate(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent, bool isLocal = false)
@@ -81,13 +82,35 @@ namespace ECS
                 go.transform.localRotation = rotation;
             }
             else go = GameObject.Instantiate(prefab, position, rotation, parent);
+            Entity entity = MakeEntityWithChildren(go);
             
+            return entity;
+        }
+
+        Entity MakeEntityWithChildren(GameObject go)
+        {
             var convertToEntity = go.GetComponent<ConvertToEntity>();
-            convertToEntity.Convert(this);
+            if (convertToEntity != null)
+            {
+                convertToEntity.Convert(this);
+
+                Entity entity = convertToEntity.entity;
+                entity.AddComponent(new TransformComp(){transform = go.transform});
+                entity.AddComponent(new GameObjectComp(){gameObject = go});
+            }
+            
+            for (int i = 0; i < go.transform.childCount; i++)
+            {
+                MakeEntityWithChildren(go.transform.GetChild(i).gameObject);
+            }
             
             return convertToEntity.entity;
         }
         
+#endregion
+
+#region Component Operations
+
         public void AddComponent<T>(int entityIndex, T component) where T : struct, IComponent
         {
             AddComponentToWorldIfNotExists<T>();
@@ -161,9 +184,19 @@ namespace ECS
             componentPools[componentIndex].RemoveAt(entityIndex);
         }
         
+#endregion
+
+#region Entity Operations & Checks
+
         public void Destroy(int entityIndex)
         {
-            entities[entityIndex].isAlive = false;
+            Entity entity = entities[entityIndex];
+            entity.isAlive = false;
+
+            if (entity.HasComponent<GameObjectComp>())
+            {
+                GameObject.Destroy(entity.GameObject());
+            }
             
             for (int i = 0; i < entityComponentIndices[entityIndex].length; i++)
             {
@@ -180,6 +213,8 @@ namespace ECS
         {
             return entities[entity.index].isAlive;
         }
+
+#endregion
 
         bool HasComponentPool<T>() where T : IComponent
         {

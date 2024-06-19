@@ -1,4 +1,6 @@
 using ECS.ECSComponent;
+using ECS.ECSUnityIntegration;
+using ECS.ECSUnityIntegration.UnityComponents;
 using UnityEngine;
 
 namespace ECS
@@ -22,6 +24,21 @@ namespace ECS
         public static bool IsAlive(this Entity entity)
         {
             return entity.world.IsAlive(entity.index);
+        }
+        
+        public static Transform Transform(this Entity entity)
+        {
+            return entity.GetComponent<TransformComp>().transform;
+        }
+        
+        public static GameObject GameObject(this Entity entity)
+        {
+            return entity.GetComponent<GameObjectComp>().gameObject;
+        }
+        
+        public static void Destroy(this Entity entity)
+        {
+            entity.world.Destroy(entity.index);
         }
         
         public static void AddComponent<T>(this Entity entity, T component) where T : struct, IComponent
