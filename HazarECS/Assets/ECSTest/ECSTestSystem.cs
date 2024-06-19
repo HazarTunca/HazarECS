@@ -10,7 +10,7 @@ namespace ECSTest
             Filter().ForEach((Entity entity, ref TestComponentA testComponentA) =>
             {
                 // Debug.Log("I'm test component A!");
-                testComponentA.value++;
+                testComponentA.valueA++;
             });
         }
     }

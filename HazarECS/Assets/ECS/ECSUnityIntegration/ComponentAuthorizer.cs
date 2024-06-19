@@ -16,7 +16,12 @@ namespace ECS.ECSUnityIntegration
         
         public override void Authorize(Entity entity)
         {
-            entity.AddComponent<T>(component);
+            entity.AddComponent<T>(GetComponent());
+        }
+        
+        protected virtual T GetComponent()
+        {
+            return component;
         }
     }
 }
