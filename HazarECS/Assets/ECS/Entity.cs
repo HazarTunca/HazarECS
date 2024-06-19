@@ -17,13 +17,39 @@ namespace ECS
             this.index = index;
             isAlive = true;
         }
+        
+        public bool Equals(Entity otherEntity)
+        {
+            return index == otherEntity.index;
+        }
+        
+        public static bool operator ==(Entity a, Entity b)
+        {
+            return a.index == b.index;
+        }
+
+        public static bool operator !=(Entity a, Entity b)
+        {
+            return a.index != b.index;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if(ReferenceEquals(null, obj)) return false;
+            return obj is Entity otherEntity && Equals(otherEntity);
+        }
+        
+        public override int GetHashCode()
+        {
+            return index;
+        }
     }
     
     public static class EntityExtensions
     {
         public static bool IsAlive(this Entity entity)
         {
-            return entity.world.IsAlive(entity.index);
+            return entity.world != null && entity.world.IsAlive(entity.index);
         }
         
         public static Transform Transform(this Entity entity)

@@ -30,16 +30,15 @@ namespace ECS
             componentPools = new ECSDynamicArray<IComponentPool>(32);
         }
 
-        
-#region Create Entity
+        #region Create Entity
 
         public Entity CreateEntity()
         {
             Entity entity = new Entity(this, lastEntityIndex++);
-            
+
             entities.Add() = entity;
             entityComponentIndices.Add(entity.index, new ECSDynamicArray<int>(256));
-            
+
             return entity;
         }
 
@@ -48,28 +47,28 @@ namespace ECS
             // create prefab
             GameObject go = GameObject.Instantiate(prefab);
             Entity entity = MakeEntityWithChildren(go);
-            
+
             return entity;
         }
-        
+
         public Entity Instantiate(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             // create prefab
             GameObject go = GameObject.Instantiate(prefab, position, rotation);
             Entity entity = MakeEntityWithChildren(go);
-            
+
             return entity;
         }
-        
+
         public Entity Instantiate(GameObject prefab, Transform parent, bool worldPositionStays)
         {
             // create prefab
             GameObject go = GameObject.Instantiate(prefab, parent, worldPositionStays);
             Entity entity = MakeEntityWithChildren(go);
-            
+
             return entity;
         }
-        
+
         public Entity Instantiate(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent, bool isLocal = false)
         {
             // create prefab
@@ -82,31 +81,40 @@ namespace ECS
                 go.transform.localRotation = rotation;
             }
             else go = GameObject.Instantiate(prefab, position, rotation, parent);
+
             Entity entity = MakeEntityWithChildren(go);
-            
+
             return entity;
         }
 
-        Entity MakeEntityWithChildren(GameObject go)
+        public Entity MakeEntityWithChildren(GameObject go)
         {
-            var convertToEntity = go.GetComponent<ConvertToEntity>();
-            if (convertToEntity != null)
+            Queue<GameObject> goQueue = new Queue<GameObject>();
+            goQueue.Enqueue(go);
+            
+            while (goQueue.Count > 0)
             {
-                convertToEntity.Convert(this);
+                GameObject currentGO = goQueue.Dequeue();
+                Transform currentTransform = currentGO.transform;
+                
+                // convert to entity
+                if (currentGO.TryGetComponent(out ConvertToEntity convertToEntity))
+                {
+                    convertToEntity.Convert(this);
+                    Entity currentEntity = convertToEntity.entity;
+                    currentEntity.AddComponent(new TransformComp() { transform = currentTransform });
+                    currentEntity.AddComponent(new GameObjectComp() { gameObject = currentGO });
+                }
+                
+                for (int i = 0; i < currentTransform.childCount; i++)
+                {
+                    goQueue.Enqueue(currentTransform.GetChild(i).gameObject);
+                }
+            }
 
-                Entity entity = convertToEntity.entity;
-                entity.AddComponent(new TransformComp(){transform = go.transform});
-                entity.AddComponent(new GameObjectComp(){gameObject = go});
-            }
-            
-            for (int i = 0; i < go.transform.childCount; i++)
-            {
-                MakeEntityWithChildren(go.transform.GetChild(i).gameObject);
-            }
-            
-            return convertToEntity.entity;
+            return go.GetComponent<ConvertToEntity>().entity;
         }
-        
+
 #endregion
 
 #region Component Operations
@@ -114,24 +122,24 @@ namespace ECS
         public void AddComponent<T>(int entityIndex, T component) where T : struct, IComponent
         {
             AddComponentToWorldIfNotExists<T>();
-            
+
             int componentIndex = ComponentInfo<T>.componentIndex;
-            
-            if(HasComponent<T>(entityIndex)) return;
+
+            if (HasComponent<T>(entityIndex)) return;
 
             entityComponentIndices[entityIndex].Add() = componentIndex;
-            
+
             componentPools[componentIndex].Add(entityIndex);
             ((ComponentPool<T>)componentPools[componentIndex])[((ComponentPool<T>)componentPools[componentIndex]).entityToComponent[entityIndex]] = component;
         }
-        
+
         public void AddComponent<T>(int entityIndex) where T : IComponent
         {
             AddComponentToWorldIfNotExists<T>();
-            
+
             int componentIndex = ComponentInfo<T>.componentIndex;
-            
-            if(HasComponent<T>(entityIndex)) return;
+
+            if (HasComponent<T>(entityIndex)) return;
 
             entityComponentIndices[entityIndex].Add() = componentIndex;
             componentPools[componentIndex].Add(entityIndex);
@@ -140,7 +148,7 @@ namespace ECS
         public bool HasComponent<T>(int entityIndex) where T : IComponent
         {
             AddComponentToWorldIfNotExists<T>();
-            
+
             int componentIndex = ComponentInfo<T>.componentIndex;
             ECSDynamicArray<int> entityComponentIndex = entityComponentIndices[entityIndex];
 
@@ -151,7 +159,7 @@ namespace ECS
 
             return false;
         }
-        
+
         public bool HasComponent(int entityIndex, Type componentType)
         {
             for (int i = 0; i < componentTypes.Count; i++)
@@ -164,26 +172,26 @@ namespace ECS
 
             return false;
         }
-        
+
         public ref T GetComponent<T>(int entityIndex) where T : struct, IComponent
         {
             AddComponentToWorldIfNotExists<T>();
-            
+
             int componentIndex = ComponentInfo<T>.componentIndex;
             return ref (((ComponentPool<T>)componentPools[componentIndex])[((ComponentPool<T>)componentPools[componentIndex]).entityToComponent[entityIndex]]);
         }
-        
+
         public void RemoveComponent<T>(int entityIndex) where T : IComponent
         {
             AddComponentToWorldIfNotExists<T>();
-            
+
             int componentIndex = ComponentInfo<T>.componentIndex;
             if (!HasComponent<T>(entityIndex)) return;
-            
+
             entityComponentIndices[entityIndex].Remove(componentIndex);
             componentPools[componentIndex].RemoveAt(entityIndex);
         }
-        
+
 #endregion
 
 #region Entity Operations & Checks
@@ -191,24 +199,25 @@ namespace ECS
         public void Destroy(int entityIndex)
         {
             Entity entity = entities[entityIndex];
+            entity.world = null;
             entity.isAlive = false;
 
             if (entity.HasComponent<GameObjectComp>())
             {
                 GameObject.Destroy(entity.GameObject());
             }
-            
+
             for (int i = 0; i < entityComponentIndices[entityIndex].length; i++)
             {
                 componentPools[entityComponentIndices[entityIndex][i]].RemoveAt(entityIndex);
             }
         }
-        
+
         public bool IsAlive(int entityIndex)
         {
             return entities[entityIndex].isAlive;
         }
-        
+
         public bool IsAlive(Entity entity)
         {
             return entities[entity.index].isAlive;
@@ -220,14 +229,14 @@ namespace ECS
         {
             return ComponentInfo<T>.componentIndex != -1;
         }
-        
+
         void AddComponentToWorldIfNotExists<T>() where T : IComponent
         {
             if (HasComponentPool<T>()) return;
-            
+
             componentPools.Add() = (IComponentPool)Activator.CreateInstance(typeof(ComponentPool<>).MakeGenericType(typeof(T)));
             ComponentInfo<T>.componentIndex = componentPools.length - 1;
-                
+
             componentTypes.Add(typeof(T));
         }
     }
