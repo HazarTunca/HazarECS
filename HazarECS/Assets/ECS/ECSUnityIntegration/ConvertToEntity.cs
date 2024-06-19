@@ -5,7 +5,7 @@ namespace ECS.ECSUnityIntegration
     [DisallowMultipleComponent]
     public class ConvertToEntity : MonoBehaviour
     {
-        Entity entity;
+        public Entity entity;
         
         public void Convert(World world)
         {
