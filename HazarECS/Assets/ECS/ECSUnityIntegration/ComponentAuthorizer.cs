@@ -10,11 +10,13 @@ namespace ECS.ECSUnityIntegration
     }
     
     [DisallowMultipleComponent]
-    public class ComponentAuthorizer<T> : ComponentAuthorizer where T : IComponent
+    public class ComponentAuthorizer<T> : ComponentAuthorizer where T : struct, IComponent
     {
+        public T component;
+        
         public override void Authorize(Entity entity)
         {
-            entity.AddComponent<T>();
+            entity.AddComponent<T>(component);
         }
     }
 }

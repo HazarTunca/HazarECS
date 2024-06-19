@@ -1,5 +1,5 @@
-using ECS;
-using ECS.UnityECSIntegration;
+using ECS.ECSComponent;
+using ECS.ECSUnityIntegration;
 
 namespace ECSTest
 {
