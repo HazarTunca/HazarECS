@@ -206,10 +206,8 @@ namespace ECS
         
         public void DestroyEntity(int entityIndex)
         {
-            Debug.Log("operation lock count: " + operationLock);
             if (operationLock > 0)
             {
-                Debug.Log("buffered destroy");
                 commandBuffer.DestroyEntity(entityIndex);
                 return;
             }
