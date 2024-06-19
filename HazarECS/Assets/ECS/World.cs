@@ -23,18 +23,20 @@ namespace ECS
 
         public readonly Dictionary<int, ECSDynamicArray<int>> entityComponentIndices;
         int lastEntityIndex;
-
+        
         int operationLock = 0;
         ECSCommandBuffer commandBuffer;
-        
+
         public World()
         {
             entities = new ECSDynamicArray<Entity>(128);
             entityComponentIndices = new Dictionary<int, ECSDynamicArray<int>>(128);
             componentPools = new ECSDynamicArray<IComponentPool>(32);
+            entityIndexMap = new Dictionary<int, int>(128);
+            
+            commandBuffer = new ECSCommandBuffer(this);
         }
 
-        
 #region Create Entity
 
         public Entity CreateEntity()
