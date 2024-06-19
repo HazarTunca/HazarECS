@@ -18,11 +18,15 @@ namespace ECS
         public static List<Type> componentTypes = new List<Type>();
 
         public readonly ECSDynamicArray<Entity> entities;
+        public readonly Dictionary<int, int> entityIndexMap;
         public readonly ECSDynamicArray<IComponentPool> componentPools;
 
         public readonly Dictionary<int, ECSDynamicArray<int>> entityComponentIndices;
         int lastEntityIndex;
 
+        int operationLock = 0;
+        ECSCommandBuffer commandBuffer;
+        
         public World()
         {
             entities = new ECSDynamicArray<Entity>(128);
@@ -30,13 +34,15 @@ namespace ECS
             componentPools = new ECSDynamicArray<IComponentPool>(32);
         }
 
-        #region Create Entity
+        
+#region Create Entity
 
         public Entity CreateEntity()
         {
             Entity entity = new Entity(this, lastEntityIndex++);
 
             entities.Add() = entity;
+            entityIndexMap.Add(entity.index, entities.length - 1);
             entityComponentIndices.Add(entity.index, new ECSDynamicArray<int>(256));
 
             return entity;
@@ -133,18 +139,6 @@ namespace ECS
             ((ComponentPool<T>)componentPools[componentIndex])[((ComponentPool<T>)componentPools[componentIndex]).entityToComponent[entityIndex]] = component;
         }
 
-        public void AddComponent<T>(int entityIndex) where T : IComponent
-        {
-            AddComponentToWorldIfNotExists<T>();
-
-            int componentIndex = ComponentInfo<T>.componentIndex;
-
-            if (HasComponent<T>(entityIndex)) return;
-
-            entityComponentIndices[entityIndex].Add() = componentIndex;
-            componentPools[componentIndex].Add(entityIndex);
-        }
-
         public bool HasComponent<T>(int entityIndex) where T : IComponent
         {
             AddComponentToWorldIfNotExists<T>();
@@ -181,7 +175,7 @@ namespace ECS
             return ref (((ComponentPool<T>)componentPools[componentIndex])[((ComponentPool<T>)componentPools[componentIndex]).entityToComponent[entityIndex]]);
         }
 
-        public void RemoveComponent<T>(int entityIndex) where T : IComponent
+        public void RemoveComponent<T>(int entityIndex) where T : struct, IComponent
         {
             AddComponentToWorldIfNotExists<T>();
 
@@ -196,31 +190,55 @@ namespace ECS
 
 #region Entity Operations & Checks
 
-        public void Destroy(int entityIndex)
+        public void LockOperations()
         {
-            Entity entity = entities[entityIndex];
-            entity.world = null;
-            entity.isAlive = false;
+            operationLock++;
+        }
+        
+        public void UnlockOperations()
+        {
+            operationLock--;
+            if (operationLock == 0)
+            {
+                commandBuffer.Execute();
+            }
+        }
+        
+        public void DestroyEntity(int entityIndex)
+        {
+            Debug.Log("operation lock count: " + operationLock);
+            if (operationLock > 0)
+            {
+                Debug.Log("buffered destroy");
+                commandBuffer.DestroyEntity(entityIndex);
+                return;
+            }
+            
+            int mappedIndex = entityIndexMap[entityIndex];
+            ref Entity entity = ref entities[mappedIndex];
 
             if (entity.HasComponent<GameObjectComp>())
             {
                 GameObject.Destroy(entity.GameObject());
             }
+            
+            entity = Entity.NULL;
+            entity.isAlive = false;
 
-            for (int i = 0; i < entityComponentIndices[entityIndex].length; i++)
-            {
-                componentPools[entityComponentIndices[entityIndex][i]].RemoveAt(entityIndex);
-            }
+            entityComponentIndices.Remove(entityIndex);
+            
+            Entity lastEntity = entities[entities.length - 1];
+
+            (entities[mappedIndex], entities[entities.length - 1]) = (entities[entities.length - 1], entities[mappedIndex]);
+            entities.RemoveAt(entities.length - 1);
+            
+            entityIndexMap[lastEntity.index] = mappedIndex;
+            entityIndexMap.Remove(entityIndex);
         }
-
-        public bool IsAlive(int entityIndex)
+        
+        public bool IsEntityAlive(int entityIndex)
         {
-            return entities[entityIndex].isAlive;
-        }
-
-        public bool IsAlive(Entity entity)
-        {
-            return entities[entity.index].isAlive;
+            return entityIndexMap.ContainsKey(entityIndex);
         }
 
 #endregion

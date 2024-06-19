@@ -82,5 +82,10 @@ namespace ECS.ECSDataStructures
         {
             Array.Resize(ref data, 1 << data.Length + count);
         }
+        
+        public void Clear()
+        {
+            length = 0;
+        }
     }
 }

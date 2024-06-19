@@ -7,6 +7,8 @@ namespace ECS
 {
     public struct Entity
     {
+        public readonly static Entity NULL = new Entity(null, -1);  
+        
         public int index;
         public bool isAlive;
         public World world;
@@ -17,7 +19,7 @@ namespace ECS
             this.index = index;
             isAlive = true;
         }
-        
+
         public bool Equals(Entity otherEntity)
         {
             return index == otherEntity.index;
@@ -49,9 +51,9 @@ namespace ECS
     {
         public static bool IsAlive(this Entity entity)
         {
-            return entity.world != null && entity.world.IsAlive(entity.index);
+            return entity.world != null && entity.world.IsEntityAlive(entity.index);
         }
-        
+
         public static Transform Transform(this Entity entity)
         {
             return entity.GetComponent<TransformComp>().transform;
@@ -64,7 +66,7 @@ namespace ECS
         
         public static void Destroy(this Entity entity)
         {
-            entity.world.Destroy(entity.index);
+            entity.world.DestroyEntity(entity.index);
         }
         
         public static void AddComponent<T>(this Entity entity, T component) where T : struct, IComponent
@@ -72,9 +74,9 @@ namespace ECS
             entity.world.AddComponent(entity.index, component);
         }
         
-        public static void AddComponent<T>(this Entity entity) where T : IComponent
+        public static void AddComponent<T>(this Entity entity) where T : struct, IComponent
         {
-            entity.world.AddComponent<T>(entity.index);
+            entity.world.AddComponent<T>(entity.index, default);
         }
         
         public static bool HasComponent<T>(this Entity entity) where T : IComponent
@@ -87,7 +89,7 @@ namespace ECS
             return ref entity.world.GetComponent<T>(entity.index);
         }
         
-        public static void RemoveComponent<T>(this Entity entity) where T : IComponent
+        public static void RemoveComponent<T>(this Entity entity) where T : struct, IComponent
         {
             entity.world.RemoveComponent<T>(entity.index);
         }
