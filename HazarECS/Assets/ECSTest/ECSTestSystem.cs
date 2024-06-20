@@ -1,5 +1,8 @@
+using System;
 using ECS;
+using ECS.ECSUnityIntegration;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace ECSTest
 {
@@ -7,12 +10,11 @@ namespace ECSTest
     {
         public void DoThing()
         {
-            if(!Input.GetKeyDown(KeyCode.Space)) return;
-            
-            Filter().ForEach((Entity entity, ref TestComponentA testComponentA) =>
+            Filter().ForEach((Entity entity, ref TransformComp transformComp, ref TestComponentA testComponentA) =>
             {
-                Debug.Log("I'm test component A!");
-                testComponentA.valueA++;
+                Transform transform = transformComp.transform;
+                float sin = Mathf.Sin(Time.time * testComponentA.speed);
+                transform.position = (Vector3.right + new Vector3(testComponentA.offset, 0)) * sin;
             });
         }
     }

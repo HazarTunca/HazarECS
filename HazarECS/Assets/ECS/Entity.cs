@@ -10,14 +10,12 @@ namespace ECS
         public readonly static Entity NULL = new Entity(null, -1);  
         
         public int index;
-        public bool isAlive;
         public World world;
 
         public Entity(World world, int index)
         {
             this.world = world;
             this.index = index;
-            isAlive = true;
         }
 
         public bool Equals(Entity otherEntity)

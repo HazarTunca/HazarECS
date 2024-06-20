@@ -8,17 +8,17 @@ namespace ECS.ECSUnityIntegration
     {
         public abstract void Authorize(Entity entity);
     }
-    
+
     [DisallowMultipleComponent]
     public class ComponentAuthorizer<T> : ComponentAuthorizer where T : struct, IComponent
     {
         public T component;
-        
+
         public override void Authorize(Entity entity)
         {
             entity.AddComponent<T>(GetComponent());
         }
-        
+
         protected virtual T GetComponent()
         {
             return component;

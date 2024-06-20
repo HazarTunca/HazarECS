@@ -223,8 +223,6 @@ namespace ECS
             }
             
             entity = Entity.NULL;
-            entity.isAlive = false;
-
             entityComponentIndices.Remove(entityIndex);
             
             Entity lastEntity = entities[entities.length - 1];

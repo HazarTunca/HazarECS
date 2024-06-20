@@ -8,6 +8,8 @@ namespace ECS.ECSComponent
         public int Length { get; set; }
         public void Add(int entityIndex);
         public void RemoveAt(int entityIndex);
+        public object GetComponent(int entityIndex);
+        public void SetComponent(int entityIndex, object value);
     }
     
     public class ComponentPool<T> : IComponentPool where T : struct, IComponent
@@ -27,6 +29,16 @@ namespace ECS.ECSComponent
         public ComponentPool()
         {
             components = new ECSDynamicArray<T>(16);
+        }
+        
+        public object GetComponent(int entityIndex)
+        {
+            return components[entityToComponent[entityIndex]];
+        }
+        
+        public void SetComponent(int entityIndex, object value)
+        {
+            components[entityToComponent[entityIndex]] = (T)value;
         }
         
         public void Add(int entityIndex)
