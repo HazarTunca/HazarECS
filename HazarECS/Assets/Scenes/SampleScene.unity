@@ -369,6 +369,12 @@ MonoBehaviour:
   component:
     speed: 1
     offset: 0
+    test: {x: 0, y: 0, z: 0}
+    testList:
+    - {x: 0, y: 0, z: 0}
+    - {x: 1, y: 1, z: 1}
+    - {x: 5, y: 5, z: 5}
+    q: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &1564813600
 GameObject:
   m_ObjectHideFlags: 0
@@ -520,6 +526,9 @@ MonoBehaviour:
   component:
     speed: 0
     offset: 0
+    test: {x: 0, y: 0, z: 0}
+    testList: []
+    q: {x: 0, y: 0, z: 0, w: 0}
 --- !u!114 &1821994794
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -108,6 +108,12 @@ namespace ECS.Editor
             else if (fieldType == typeof(string)) EditorGUILayout.TextField(fieldName, (string)value);
             else if (fieldType == typeof(long)) EditorGUILayout.LongField(fieldName, (long)value);
             else if (fieldType == typeof(bool)) EditorGUILayout.Toggle(fieldName, (bool)value);
+            else if (fieldType == typeof(Vector3)) EditorGUILayout.Vector3Field(fieldName, (Vector3)value);
+            else if (fieldType == typeof(Vector3Int)) EditorGUILayout.Vector3IntField(fieldName, (Vector3Int)value);
+            else if (fieldType == typeof(Vector2)) EditorGUILayout.Vector2Field(fieldName, (Vector2)value);
+            else if (fieldType == typeof(Vector2Int)) EditorGUILayout.Vector2IntField(fieldName, (Vector2Int)value);
+            else if (fieldType == typeof(Color)) EditorGUILayout.ColorField(fieldName, (Color)value);
+            else if (fieldType == typeof(Quaternion)) EditorGUILayout.Vector3Field(fieldName, ((Quaternion)value).eulerAngles);
             else if (fieldType.IsEnum) EditorGUILayout.EnumPopup(fieldName, (Enum)value);
             else if (fieldType.IsArray)
             {
@@ -204,6 +210,42 @@ namespace ECS.Editor
                 var newValue = EditorGUILayout.Toggle(fieldName, value);
                 fieldInfo.SetValue(componentObject, newValue);
             }
+            else if (fieldType == typeof(Vector3))
+            {
+                var value = (Vector3)fieldInfo.GetValue(componentObject);
+                var newValue = EditorGUILayout.Vector3Field(fieldName, value);
+                fieldInfo.SetValue(componentObject, newValue);
+            }
+            else if (fieldType == typeof(Vector3Int))
+            {
+                var value = (Vector3Int)fieldInfo.GetValue(componentObject);
+                var newValue = EditorGUILayout.Vector3IntField(fieldName, value);
+                fieldInfo.SetValue(componentObject, newValue);
+            }
+            else if (fieldType == typeof(Vector2))
+            {
+                var value = (Vector2)fieldInfo.GetValue(componentObject);
+                var newValue = EditorGUILayout.Vector2Field(fieldName, value);
+                fieldInfo.SetValue(componentObject, newValue);
+            }
+            else if (fieldType == typeof(Vector2Int))
+            {
+                var value = (Vector2Int)fieldInfo.GetValue(componentObject);
+                var newValue = EditorGUILayout.Vector2IntField(fieldName, value);
+                fieldInfo.SetValue(componentObject, newValue);
+            }
+            else if (fieldType == typeof(Color))
+            {
+                var value = (Color)fieldInfo.GetValue(componentObject);
+                var newValue = EditorGUILayout.ColorField(fieldName, value);
+                fieldInfo.SetValue(componentObject, newValue);
+            }
+            else if (fieldType == typeof(Quaternion))
+            {
+                var value = (Quaternion)fieldInfo.GetValue(componentObject);
+                var newValue = Quaternion.Euler(EditorGUILayout.Vector3Field(fieldName, value.eulerAngles));
+                fieldInfo.SetValue(componentObject, newValue);
+            }
             else if (fieldType.IsEnum)
             {
                 var value = (Enum)fieldInfo.GetValue(componentObject);
@@ -255,12 +297,14 @@ namespace ECS.Editor
             }
             else
             {
+                var value = fieldInfo.GetValue(componentObject);
+                if(value != componentObject.GetType().GetField(fieldInfo.Name).GetValue(componentObject)) return;
+
                 foldoutData.TryAdd(fieldName, false);
                 foldoutData[fieldName] = EditorGUILayout.Foldout(foldoutData[fieldName], fieldName, true);
 
                 if (foldoutData[fieldName])
                 {
-                    var value = fieldInfo.GetValue(componentObject);
 
                     EditorGUI.indentLevel++;
                     foreach (var subFieldInfo in fieldType.GetFields())
