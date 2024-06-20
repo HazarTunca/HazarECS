@@ -1,10 +1,8 @@
-
-using System;
+using ECS;
 using ECS.ECSUnityIntegration;
-using ECSTest;
 using UnityEngine;
 
-namespace ECS
+namespace ECSTest
 {
     public class ECSSampleManager : MonoBehaviour
     {
